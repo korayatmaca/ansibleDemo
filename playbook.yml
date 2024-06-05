@@ -1,0 +1,67 @@
+- name: webserver demo
+  hosts: db_and_web_server1
+  gather_facts: yes
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Install req dependencies
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python
+        - python-setuptools
+        - python-devel
+        - gcc
+        - gcc-c++
+        - make
+        - python-pip
+
+    - name: Install mysql
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - mysql-server
+        - mysql
+
+    - name: start mysql service
+      service:
+        name: mysqld
+        state: started
+        enabled: yes
+
+    - name: Install MySQL Python module
+      pip:
+        name: PyMySQL
+        state: present
+
+    - name: create app database
+      mysql_db:
+        name: employee_db
+        state: present
+
+    - name: create db user
+      mysql_user:
+        name: db_user
+        password: Passw0rd
+        priv: "*.*:ALL"
+        state: present
+        host: "%"
+
+    - name: Install python flask dependencies
+      pip: name={{ item }} state=present
+      with_items:
+        - flask
+        - flask-mysql
+
+    - name: Copy app files
+      copy:
+        src: app.py
+        dest: /opt/app.py
+        become: yes
+
+    - name: Run app
+      shell: FLASK_APP=/opt/app.py nohup flask run --host=0.0.0.0 &
+
+

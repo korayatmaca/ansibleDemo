@@ -1,0 +1,7 @@
+# ping_playbook.yml
+- name: Ping IP addresses
+  hosts: targets
+  gather_facts: yes
+  tasks:
+    - name: Ping the target host
+      ping:
